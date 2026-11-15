@@ -1,0 +1,34 @@
+<?php
+session_start();
+$config = require 'config.php';
+header("Content-Type: application/json");
+
+if (!isset($_SESSION["username"], $_SESSION["user_id"])) {
+    http_response_code(401);
+    echo json_encode("Errore: non sei loggato");
+    exit;
+}
+
+$dati = json_decode(file_get_contents("php://input"), true);
+
+$lat = (float)($dati["lat"] ?? 0);
+$lon = (float)($dati["lon"] ?? 0);
+
+$url = "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=" . $config["meteo_key"] . "&units=metric&lang=it";
+
+@$risposta = file_get_contents($url);
+if(!$risposta){
+    echo json_encode("Impossibile trovare il meteo");
+    exit;
+}
+
+$meteo = json_decode($risposta, true);
+
+if (!isset($meteo["name"])){
+   echo json_encode("Errore: impossibile aprire il meteo");
+   exit;
+}
+
+    
+$testo = $meteo["name"] . " - " . $meteo["weather"][0]["description"] . ", " . (int)$meteo["main"]["temp"] . "°C";
+echo json_encode($testo);

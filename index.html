@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager</title>
+    <script src="script.js" defer></script>
+    
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .nascondi { display: none; }
+    </style>
+</head>
+<body>
+    <div id="sezione-benvenuto" class="layout-welcome">
+        <h1>Benvenuto nel task manager!</h1>
+        <p>cosa desideri fare?</p>
+        <button onclick="mostraSezione('sezione-login')">Login</button>
+        <button onclick="mostraSezione('sezione-register')">Registrazione</button>
+    </div>
+
+    <div id="sezione-login" class="nascondi card">
+        <h2>Schermata di Login</h2>
+        <input type="text" id="login-user" placeholder="Nome Utente">
+        <input type="password" id="login-password" placeholder="Password">
+        <a href="#" onclick="mostraSezione('sezione-password-dimenticata')" class="forgot-password-link">Password dimenticata?</a>
+        <button onclick="accedi()">Accedi</button>
+        <button onclick="mostraSezione('sezione-benvenuto')">Torna schermata principale</button>
+        <p id="messaggio-login" style="font-weight: bold;"></p>
+    </div>
+
+    <div id="sezione-password-dimenticata" class="nascondi card">
+        <h2>Password dimenticata</h2>
+        <input type="text" id="forgot-email" placeholder="Inserisci la tua email">
+        <p>Verrà inviata una email con la nuova password, potrebbe richiedere alcuni minuti</p>
+        <button onclick="mostraRecuperoPassword()">Invia</button>
+        <button onclick="mostraSezione('sezione-benvenuto')">Torna schermata principale</button>
+        <p id="messaggio-password-dimenticata" style="font-weight: bold;"></p>
+    </div>
+
+    <div id="sezione-register" class="nascondi card">
+        <h2>Schermata di Registrazione</h2>
+        <input type="text" id="register-user" placeholder="Nome Utente">
+        <input type="password" id="register-password" placeholder="Password">
+        <input type="text" id="register-email" placeholder="Email">
+        <button onclick="register()">Registrati</button>
+        <button onclick="mostraSezione('sezione-benvenuto')">Torna schermata principale</button>
+        <p id="messaggio-register" style="font-weight: bold;"></p>
+    </div>
+
+    <div id="dashboard" class="nascondi layout-dashboard">
+    <!-- Header pulito a tutto schermo con flexbox -->
+        <div class="header-dashboard">
+            <div class="welcome-box">
+                <h1 id="titolo-benvenuto">Benvenuto</h1>
+                <span id="widget-meteo" class="meteo-badge">Caricamento meteo...</span>
+             </div>
+        
+        <div class="avatar-container" style="position: relative;">
+            <!-- L'avatar cliccabile -->
+            <div class="avatar-circle-placeholder" onclick="toggleMenuProfilo()" title="Profilo">
+                <img id="avatar-immagine" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+        
+                <!-- Omino di fallback con dimensione corretta -->
+                <span id="avatar-fallback" style="font-size: 20px; line-height: 1;">👤</span>
+            </div>
+        
+            <!-- Il menu a tendina (inizialmente nascosto con .nascondi) -->
+            <div id="menu-tendina-profilo" class="dropdown-menu nascondi">
+                <button onclick="mostraSezione('sezione-impostazioni')">⚙️ Impostazioni</button>
+                <button onclick="mostraSezione('sezione-file'),displayAllFiles()">Cartella File</button>
+                <!-- Interruttore Tema Scuro stile iPhone -->
+                <div class="menu-item-row">
+                    <span>🌙 Tema scuro</span>
+                    <label class="switch">
+                        <input type="checkbox" id="checkbox-tema" onchange="toggleDarkMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 5px 0;">
+                <button onclick="logout()" class="btn-logout-item">Log out</button>
+            </div>
+        </div>
+    </div>
+        <div class="input-group">
+            <input type="text" id="input-new-task" placeholder="Scrivi una nuova attività">
+            <button class="btn btn-primary" onclick="addTask()">Aggiungi task</button>
+        </div>
+
+        <p id="messaggio-dashboard" style="font-weight: bold;"></p>
+
+        <div id="contenitore-task"></div>
+    </div>
+
+    <div id="sezione-impostazioni" class="nascondi card">
+        <h2>Impostazioni Profilo</h2>
+        <div class="form-group-input">
+            <input type="text" id="nuovo-username" placeholder="Nuovo username (opzionale)">
+            <input type="password" id="vecchia-password" placeholder="Password attuale (obbligatoria)">
+            <input type="password" id="nuova-password" placeholder="Nuova password (opzionale)">
+        </div>
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="aggiornaProfilo()">Salva Modifiche</button>
+            <button class="btn btn-secondary" onclick="mostraSezione('dashboard')">Torna alla Dashboard</button>
+            <button class="btn btn-dark-toggle" onclick="toggleDarkMode()">🌙 Modalità Scura</button>
+        </div>
+        <div class="profilo-impostazioni-box">
+            <label for="input-carica-avatar" class="btn-custom-upload">
+            📁 Scegli immagine profilo
+             </label>
+            <input type="file" id="input-carica-avatar" accept="image/*" style="display: none;" onchange="addProfileImage(event)">
+        </div>
+        <p id="messaggio-impostazioni" style="font-weight: bold;"></p>
+    </div>
+
+    <div id="sezione-file" class="nascondi">
+        <h2>I miei file</h2>
+    
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 15px;">
+        <!-- Input file nascosto ma pronto a ricevere il comando -->
+            <input type="file" id="input-file" style="display: none;" onchange="addFile()" multiple>
+            <button onclick="deleteAllFile()">Elimina Tutti i file</button>
+            <button class="btn-carica" onclick="document.getElementById('input-file').click()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Carica File
+            </button>
+
+            <button onclick="mostraSezione('dashboard')" class="btn btn-secondary">Back</button>
+        </div>
+
+        <p id="messaggio-file" style="font-weight: bold; margin-top: 10px;"></p>
+        <div id="contenitore-file"></div>
+    </div>
+    <div id="modal-rinomina" class="modal-overlay nascondi">
+        <div class="modal-card">
+            <h3>Rinomina File</h3>
+
+            <!-- Nome precedente barrato o evidenziato -->
+            <div class="modal-info-vecchio">
+                <span>Nome precedente:</span>
+                <p id="modal-vecchio-nome" class="vecchio-nome-testo"></p>
+            </div>
+
+            <!-- Input per il nuovo nome -->
+            <div class="modal-group-input">
+                <label for="modal-input-nuovo-nome">Nuovo nome:</label>
+                <input type="text" id="modal-input-nuovo-nome" placeholder="Inserisci il nuovo nome..." autocomplete="off">
+            </div>
+
+            <!-- Pulsanti di azione -->
+            <div class="modal-azioni">
+                <button id="btn-annulla-modal" class="btn-modal-annulla" onclick="backDashboard()">Annulla</button>
+                <button id="btn-conferma-modal" class="btn-modal-conferma" onclick="renameFile()">Salva</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-seleziona-file" class="modal-overlay nascondi">
+        <div class="modal-card modal-card-larga">
+            <div class="modal-header">
+                <h3>Seleziona un file da allegare</h3>
+                <button class="btn-chiudi-modal" onclick="chiudiModalFile()">&times;</button>
+            </div>
+
+            <!-- Contenitore scorrevole con i file dell'utente -->
+            <div id="griglia-file-selezionabili" class="file-picker-grid">
+
+            </div>
+
+            <!-- Pulsanti di azione -->
+            <div class="modal-azioni">
+                <button class="btn-modal-annulla" onclick="chiudiModalFile()">Annulla</button>
+            </div>
+        </div>
+    </div>
+    <div id="progress-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center;">
+        
+        <!-- Box centrale della barra -->
+        <div style="background: #222; padding: 25px; border-radius: 8px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center;">
+            <h3 style="color: #fff; margin-bottom: 15px; font-family: sans-serif;">Caricamento file in corso...</h3>
+            
+            <div style="background-color: #444; border-radius: 4px; overflow: hidden; height: 12px; width: 100%; margin-bottom: 15px;">
+                <div id="progress-bar" style="background-color: #007acc; width: 0%; height: 100%; transition: width 0.2s ease;"></div>
+            </div>
+            
+            <span id="progress-text" style="font-size: 13px; color: #aaa; display: block;">Preparazione...</span>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+<?php
+return [
+    "meteo_key" => "YOUR KEY",
+    "mail_user" => "YOUR EMAIL",
+    "mail_pass" => "YOUR GOOGLE ACTIVITY PASSWORD"
+];
