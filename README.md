@@ -26,7 +26,7 @@ Frontend in HTML, CSS e JavaScript; backend in PHP con database MySQL/MariaDB.
 1. Copia la cartella del progetto in `C:\xampp\htdocs\` (es. `C:\xampp\htdocs\taskmanager`).
 2. Avvia **Apache** e **MySQL** dal pannello di controllo di XAMPP.
 3. Apri phpMyAdmin (`http://localhost/phpmyadmin`), crea un database chiamato `taskmanager` e importa il file `database.sql`.
-4. Nella cartella `api/` copia `config.example.php` in `config.php` e compila i valori:
+4. Nella cartella `api/` copia `config.example.txt` in `config.php` e compila i valori:
 
    ```php
    return [
@@ -36,7 +36,7 @@ Frontend in HTML, CSS e JavaScript; backend in PHP con database MySQL/MariaDB.
    ];
    ```
 
-5. Controlla che i dati di connessione in `api/db.php` corrispondano al tuo MySQL (in XAMPP di default: utente `root`, password vuota).
+5. Controlla che i dati di connessione in `api/db.txt` corrispondano al tuo MySQL (in XAMPP di default: utente `root`, password vuota).
 6. Apri `http://localhost/taskmanager/` nel browser.
 
 La cartella `uploads/` viene creata automaticamente al primo caricamento di un file.
