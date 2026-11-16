@@ -11,7 +11,7 @@ require 'PHPMailer/SMTP.php';
 
 $config = require 'config.php';
 $dati = json_decode(file_get_contents("php://input"), true);
-
+$ip = $_SERVER["REMOTE_ADDR"];
 $email = trim($dati["email"] ?? "");
 
 if ($email === ""){
@@ -22,6 +22,17 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)){
     echo json_encode("Errore: email non valida, riprova");
     exit;
 }
+
+$query = $pdo->prepare("SELECT COUNT(*) FROM tentativi WHERE tipo = 'password' AND ip = ? AND data_tentativo > (NOW() - INTERVAL 15 MINUTE)");
+$query->execute([$ip]);
+$tentativi = $query->fetchColumn();
+
+if ($tentativi >= 1){
+    http_response_code(429);
+    echo json_encode("Ritenta tra 15 minuti");
+    exit;
+}
+
 $query = $pdo->prepare("SELECT id FROM utenti WHERE email = ?");
 $query->execute([$email]);
 $row = $query->fetch();
@@ -60,12 +71,17 @@ try{
     $mail->Body    = "Password sostitutiva: " . $newPassword;
     $mail->send();
     $pdo->commit();
+    $query = $pdo->prepare("INSERT INTO tentativi (tipo, ip) VALUES (?, ?)");
+    $query->execute(['password', $ip]);
     echo json_encode("Se l'email è registrata riceverai un messaggio");
 }   catch (\Exception $e){
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
     error_log($e->getMessage());
+    $query = $pdo->prepare("INSERT INTO tentativi (tipo, ip) VALUES (?, ?)");
+    $query->execute(['password', $ip]);
     echo json_encode("Se l'email è registrata riceverai un messaggio");
     exit;
 }
+
 
 

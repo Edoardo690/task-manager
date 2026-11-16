@@ -29,9 +29,17 @@ if (!$riga){
     echo json_encode("Errore attività non trovata");
     exit;
 }
+
+$query = $pdo->prepare("SELECT 1 FROM task_file WHERE task_id = ? AND file_id = ?");
+$query->execute([$idTask, $idFile]);
+if ($query->fetch()) {
+    echo json_encode("File già collegato a questa attività");
+    exit;
+}
+
 try{
-    $query = $pdo->prepare("UPDATE attivita SET file_id = ? WHERE id = ? AND username = ?");
-    $query->execute([$idFile, $idTask, $username]);
+    $query = $pdo->prepare("INSERT INTO task_file (task_id, file_id) VALUES (?,?)");
+    $query->execute([$idTask, $idFile]);
     echo json_encode("File collegato con successo!");
 }   catch (PDOException $e){
     error_log($e->getMessage());

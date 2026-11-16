@@ -25,8 +25,7 @@ try{
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE attivita SET file_id = NULL WHERE file_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM file_utenti WHERE id = ? AND username = ?")->execute([$id, $username]);
-    
-
+    $pdo->prepare("DELETE FROM task_file WHERE file_id = ?")->execute([$id]);
     $pdo->commit();
 
 }   catch(PDOException $e){

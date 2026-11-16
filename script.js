@@ -79,6 +79,9 @@ function mostraSezione(idSezioneDaMostrare) {
     
 }
 
+async function libera_tabella_tentativiJS() {
+    await chiamaApi("api/libera_tabella_tentativi.php");
+}
 
 async function accedi() {
     let usernameScritto = document.getElementById("login-user").value;
@@ -111,6 +114,15 @@ async function mostraRecuperoPassword() {
     mex.innerText = "Invio in corso...";
     let risposta = await chiamaApi("api/recupera_password.php", {email: email});
     mex.innerText = risposta;
+    if (risposta.includes("Ritenta")){
+        mex.style.color = "red";
+    }
+    else if (risposta.includes("email")){
+        mex.style.color = "green";
+    }
+        
+    
+    
 }
 
 
@@ -151,35 +163,42 @@ async function caricaTask() {
     let contenitore = document.getElementById("contenitore-task");
     if (!contenitore) return;
     contenitore.innerHTML = "";
+    console.log(taskList);
 
     for (let i = 0; i < taskList.length; i++){
         let currentTask = taskList[i];
         let idTask    = currentTask.id;
         let testoTask = escapeHtml(currentTask.testo);
-        let completata = currentTask.completata;
+        let completata = Number(currentTask.completata) === 1;
         let dataTask  = escapeHtml(currentTask.data);
-        let fileId    = currentTask.file_id;
-        let nomeFile  = escapeHtml(currentTask.nome_file);
-        let filePath  = currentTask.percorso;
-        let encodedPath = filePath ? encodeURI(filePath) : "";
-        
-        let rigaDiv = document.createElement("div");
-        rigaDiv.className = `task-item ${completata ? 'task-completata' : ''}`;
-
-        // Se c'è un file associato, creiamo il badge visivo con il nome del file
         let fileBadgeHTML = "";
-        if (fileId && nomeFile && filePath) {
-            fileBadgeHTML = `
-                <span class="task-file-badge" title="Allegato: ${nomeFile}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                    ${nomeFile}
-                </span>
+        let files = Array.isArray(currentTask.files) ? currentTask.files : [];
 
-                <a href="${encodedPath}" download="${nomeFile}" title="Scarica file" style="display: block; width: 100%; height: 100%;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                </a>
-            `;
+        
+        for (let j = 0; j < files.length; j++){
+            let currentFile = files[j];
+            let fileId    = currentFile.file_id;
+            let nomeFile  = escapeHtml(currentFile.nome_file);
+            let filePath  = currentFile.percorso;
+            if (!currentFile.file_id || !nomeFile || !filePath) continue;
+            let encodedPath = filePath ? encodeURI(filePath) : "";
+            
+            if (fileId && nomeFile && filePath) {
+                fileBadgeHTML += `
+                    <span class="task-file-badge" title="Allegato: ${nomeFile}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        ${nomeFile}
+                    </span>
+            
+                    <a href="${encodedPath}" download="${nomeFile}" title="Scarica file" style="display: block; width: 100%; height: 100%;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </a>
+                `;
+            }
         }
+    
+        let rigaDiv = document.createElement("div");
+        rigaDiv.className = `task-item ${completata ? 'task-completata' : ''}`;        
 
         rigaDiv.innerHTML = `
             <button class="btn-icona-elimina" onclick="eliminaTask(${idTask})" title="Elimina attività">
@@ -519,13 +538,17 @@ function isImage(filename) {
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext);
 }
 async function abilitaRinomina(idFile){
+    let card = document.getElementById(`file-card-${idFile}`);
+    let fileName = card.querySelector(".file-nome").textContent;
+
     let renameMenu = document.getElementById("modal-rinomina");
     renameMenu.classList.remove("nascondi");
+
     let oldName = document.getElementById("modal-vecchio-nome");
     oldName.innerText = fileName;
 
     currentFileId = idFile;
-    currentOldFileName = fileName; 
+    currentOldFileName = fileName;
 }
 async function backDashboard() {
     let renameMenu = document.getElementById("modal-rinomina");
@@ -594,8 +617,8 @@ async function assegnaFileATask(idTask, idFile) {
     let risposta = await chiamaApi("api/associa_file_task.php", {idTask: idTask, idFile: idFile});
     let mex = document.getElementById("messaggio-dashboard");
     mex.innerText = risposta;
-    chiudiModalFile()
-    caricaTask()
+    chiudiModalFile();
+    await caricaTask();
 }
 
 async function deleteAllFile() {
@@ -605,3 +628,4 @@ async function deleteAllFile() {
     mex.innerText = risposta;
     displayAllFiles();
 }
+
