@@ -28,8 +28,13 @@ $query->execute([$ip]);
 $tentativi = $query->fetchColumn();
 
 if ($tentativi >= 1){
+    $query = $pdo->prepare("SELECT 900 - TIMESTAMPDIFF(SECOND, MIN(data_tentativo), NOW()) FROM tentativi WHERE tipo = 'password' AND ip = ? AND data_tentativo > (NOW() - INTERVAL 15 MINUTE)");
+    $query->execute([$ip]);
+    $secondi = max(0,(int)$query->fetchColumn());
+
     http_response_code(429);
-    echo json_encode("Ritenta tra 15 minuti");
+    echo json_encode(['errore' => "Errore, troppi tentativi",
+        'secondi' => $secondi]);
     exit;
 }
 

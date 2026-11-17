@@ -90,8 +90,28 @@ async function accedi() {
     let risposta = await chiamaApi("api/login.php", {username: usernameScritto, password: passwordScritta});
     let mex = document.getElementById("messaggio-login");
     mex.innerText = risposta;
-
-    if (risposta.includes("Login")){
+    if (typeof risposta === "object" && 'secondi' in risposta){
+        mex.style.color = "red";
+        let secondi = risposta.secondi;
+        mex.innerHTML= `Tentativi esauriti, ritenta tra ${secondi} secondi`;
+        const BUTTONlOGIN = document.getElementById("login-button-accedi");
+        BUTTONlOGIN.disabled = true;
+        let timer = setInterval(() => {
+            secondi--;
+            if (secondi <= 0){
+                mex.innerHTML = ("Puoi riprovare ora");
+                mex.style.color = "green";
+                BUTTONlOGIN.disabled = false;
+                clearInterval(timer);
+            }
+            else{
+                
+                mex.innerHTML = `Tentativi esauriti, ritenta tra ${secondi} secondi`;
+            }
+        }, 1000)
+        
+    }
+    else if (risposta.includes("Login")){
         utenteCorrente = usernameScritto
         mex.style.color = "green";
         setTimeout(function(){
@@ -113,16 +133,37 @@ async function mostraRecuperoPassword() {
     let mex = document.getElementById("messaggio-password-dimenticata");
     mex.innerText = "Invio in corso...";
     let risposta = await chiamaApi("api/recupera_password.php", {email: email});
-    mex.innerText = risposta;
-    if (risposta.includes("Ritenta")){
+
+    if (typeof risposta === "object" && 'secondi' in risposta){
         mex.style.color = "red";
+        let secondi = risposta.secondi;
+        mex.innerHTML= `Tentativi esauriti, ritenta tra ${secondi} secondi`;
+        const BUTTONlOGIN = document.getElementById("login-button-accedi");
+        BUTTONlOGIN.disabled = true;
+        let timer = setInterval(() => {
+            secondi--;
+            if (secondi <= 0){
+                mex.innerHTML = ("Puoi riprovare ora");
+                mex.style.color = "green";
+                BUTTONlOGIN.disabled = false;
+                clearInterval(timer);
+            }
+            else{
+                
+                mex.innerHTML = `Tentativi esauriti, ritenta tra ${secondi} secondi`;
+            }
+        }, 1000);  
+    }
+    
+    else if (risposta.includes("Ritenta")){
+        mex.style.color = "red";
+        mex.innerText = risposta;
     }
     else if (risposta.includes("email")){
         mex.style.color = "green";
+        mex.innerText = risposta;
     }
         
-    
-    
 }
 
 
