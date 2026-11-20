@@ -64,3 +64,5 @@ taskmanager/
 
 I file caricati e le credenziali in `config.php` sono esclusi dal repository tramite `.gitignore`.
 Il progetto è pensato per l'uso in locale e a scopo di studio.
+Se vuoi provare il sito ora online 
+https://taskmanager.altervista.org/
